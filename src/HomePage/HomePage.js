@@ -1,6 +1,63 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { axiosGet } from './../axiosService';
+import { Chart } from 'chart.js/auto';
 
 function HomePage() {
+    const chartRef = useRef(null);
+    const chartInstanceRef = useRef(null); // Maintain a reference to the chart instance
+
+
+    useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const response = await axiosGet('/budget');
+    
+            if (response && response.data && response.data.myBudget) {
+              const myBudgetData = response.data.myBudget;
+    
+              // Extract labels and data values from the fetched data
+              const labels = myBudgetData.map((item) => item.title);
+              const data = myBudgetData.map((item) => item.budget);
+    
+              // Destroy the existing chart instance if it exists
+              if (chartInstanceRef.current) {
+                chartInstanceRef.current.destroy();
+              }
+    
+              // Create a new Chart.js pie chart
+              const chartContext = chartRef.current.getContext('2d');
+              const newChartInstance = new Chart(chartContext, {
+                type: 'pie',
+                data: {
+                  labels: labels,
+                  datasets: [
+                    {
+                      data: data,
+                      backgroundColor: [
+                        'red',
+                        'blue',
+                        'green',
+                        'yellow',
+                        'orange',
+                        'purple',
+                        'pink',
+                      ], // You can specify custom colors here
+                    },
+                  ],
+                },
+              });
+    
+              // Update the chart instance reference
+              chartInstanceRef.current = newChartInstance;
+            }
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
+        };
+    
+        fetchData();
+      }, []);
+    
   return (
     <main className="center" id="main">
 
@@ -66,7 +123,7 @@ function HomePage() {
             <article>
                 <h1>Chart</h1>
                 <p>
-                    <canvas id="myChart" width="400" height="400"></canvas>
+                    <canvas id="myChart" width="400" height="400" ref={chartRef}></canvas>
                 </p>
             </article>
 
